@@ -1,15 +1,12 @@
 import streamDeck, {
   action,
   DialAction,
-  DidReceiveSettingsEvent,
-  JsonValue,
   KeyAction,
   KeyDownEvent,
-  SendToPluginEvent,
   SingletonAction,
 } from "@elgato/streamdeck";
-import sonar from "../managers/sonar-controller";
-import { VolumeData } from "../types/volume-data";
+import sonar from "../../managers/sonar-controller";
+import { VolumeData } from "../../types/volume-data";
 
 @action({ UUID: "com.stellar.steelseries-sonar-controls.set-volume" })
 export class SetVolume extends SingletonAction<SetVolumeSettings> {

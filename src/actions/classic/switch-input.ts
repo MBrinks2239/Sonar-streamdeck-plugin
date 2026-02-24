@@ -1,11 +1,13 @@
 import streamDeck, {
   action,
-  JsonValue,
   KeyDownEvent,
   SendToPluginEvent,
   SingletonAction,
 } from "@elgato/streamdeck";
-import sonar from "../managers/sonar-controller";
+import type {
+	JsonValue
+} from "@elgato/utils";
+import sonar from "../../managers/sonar-controller";
 
 @action({ UUID: "com.stellar.steelseries-sonar-controls.switch-input" })
 export class SwitchInput extends SingletonAction<SwitchInputSettings> {
@@ -26,7 +28,7 @@ export class SwitchInput extends SingletonAction<SwitchInputSettings> {
       .filter((input) => input.dataFlow == "capture" && input.role == "none")
       .map((input) => ({ label: input.friendlyName, value: input.id }));
 
-    streamDeck.ui.current?.sendToPropertyInspector({
+    streamDeck.ui.sendToPropertyInspector({
       event: "getInputs",
       items: options,
     });

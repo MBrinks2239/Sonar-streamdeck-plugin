@@ -1,11 +1,13 @@
 import streamDeck, {
   action,
-  JsonValue,
   KeyDownEvent,
   SendToPluginEvent,
   SingletonAction,
 } from "@elgato/streamdeck";
-import sonar from "../managers/sonar-controller";
+import type {
+	JsonValue
+} from "@elgato/utils";
+import sonar from "../../managers/sonar-controller";
 
 @action({ UUID: "com.stellar.steelseries-sonar-controls.switch-output" })
 export class SwitchOutput extends SingletonAction<SwitchOutputSettings> {
@@ -27,7 +29,7 @@ export class SwitchOutput extends SingletonAction<SwitchOutputSettings> {
       .filter((output) => output.dataFlow == "render" && output.role == "none")
       .map((output) => ({ label: output.friendlyName, value: output.id }));
 
-    streamDeck.ui.current?.sendToPropertyInspector({
+    streamDeck.ui.sendToPropertyInspector({
       event: "getOutputs",
       items: options,
     });

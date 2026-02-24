@@ -1,8 +1,30 @@
 {
 	"Name": "Steelseries Sonar Controls",
-	"Version": "0.1.0.2",
+	"Version": "0.1.0.3",
 	"Author": "stellar",
 	"Actions": [
+		{
+			"Name": "Classic: Volume dial",
+			"UUID": "com.stellar.steelseries-sonar-controls.volume-dial",
+			"Icon": "imgs/actions/volume-dial/volume_dial",
+			"Tooltip": "Adjust the volume of one of the sonar channels.",
+			"PropertyInspectorPath": "ui/volume-dial.html",
+			"Controllers": [
+				"Encoder"
+			],
+			"Encoder": {
+				"layout": "$B1",
+				"TriggerDescription": {
+					"Rotate": "Adjust Volume",
+					"Push": "Toggle Mute"
+				}
+			},
+			"States": [
+				{
+					"Image": "imgs/actions/mute-channel/volume_up"
+				}
+			]
+		},
 		{
 			"Name": "Mute sonar channel",
 			"UUID": "com.stellar.steelseries-sonar-controls.mute-channel",
