@@ -6,7 +6,7 @@
 		{
 			"Name": "Classic: Volume dial",
 			"UUID": "com.stellar.steelseries-sonar-controls.volume-dial",
-			"Icon": "imgs/actions/volume-dial/volume_dial",
+			"Icon": "imgs/actions/volume-dial/dial_icon",
 			"Tooltip": "Adjust the volume of one of the sonar channels.",
 			"PropertyInspectorPath": "ui/volume-dial.html",
 			"Controllers": [
@@ -16,7 +16,8 @@
 				"layout": "$B1",
 				"TriggerDescription": {
 					"Rotate": "Adjust Volume",
-					"Push": "Toggle Mute"
+					"Push": "Toggle Mute",
+					"Touch": "Swap between channels"
 				}
 			},
 			"States": [

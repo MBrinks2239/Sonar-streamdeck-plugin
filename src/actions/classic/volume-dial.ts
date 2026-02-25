@@ -1,13 +1,16 @@
 import streamDeck, {
   action,
+  DialDownEvent,
   DialRotateEvent,
   FeedbackPayload,
   SingletonAction,
+  TouchTapEvent,
   WillAppearEvent,
   WillDisappearEvent,
 } from "@elgato/streamdeck";
 import sonar from "../../managers/sonar-controller";
 import { VolumeData } from "../../types/volume-data";
+import { convertChannelNameToHumanReadable, getNextChannel } from "../../util/channel";
 
 @action({ UUID: "com.stellar.steelseries-sonar-controls.volume-dial" })
 export class SetVolumeDial extends SingletonAction<SetVolumeDialSettings> {
@@ -58,22 +61,44 @@ export class SetVolumeDial extends SingletonAction<SetVolumeDialSettings> {
 
     ev.action.setFeedback({
       indicator: newVolume * 100,
-      value: `${Math.round(newVolume * 100)}%`,
-      title: ev.payload.settings.selectedChannel.toUpperCase(),
+      value: getVolumeLabel(channel, response),
+      title: convertChannelNameToHumanReadable(ev.payload.settings.selectedChannel),
     } as FeedbackPayload);
   }
 
-  private async updateDisplay(sonarInstance: any, action: any) {
+  override async onTouchTap(ev: TouchTapEvent<SetVolumeDialSettings>): Promise<void> {
+    ev.action.setSettings({
+      ...ev.payload.settings,
+      selectedChannel: getNextChannel(ev.payload.settings.selectedChannel),
+    });
+    this.updateDisplay(this.sonarInstance, ev.action);
+  }
+
+  override async onDialDown(ev: DialDownEvent<SetVolumeDialSettings>): Promise<void> {
+    const isMuted = await this.sonarInstance.getChannelMuteData(ev.payload.settings.selectedChannel);
+    this.sonarInstance.muteChannel(ev.payload.settings.selectedChannel, !isMuted);
+    this.updateDisplay(this.sonarInstance, ev.action);
+  }
+
+  private async updateDisplay(sonarInstance: sonar, action: any) {
     const settings = await action.getSettings();
     const channel = settings.selectedChannel;
     const response = await sonarInstance.getVolumeData();
     let volume = getVolumeOfChannel(channel, response);
     action.setFeedback({
       indicator: volume * 100,
-      value: `${Math.round(volume * 100)}%`,
-      title: settings.selectedChannel.toUpperCase(),
+      value: getVolumeLabel(channel, response),
+      title: convertChannelNameToHumanReadable(settings.selectedChannel),
+      icon: "imgs/channels/" + settings.selectedChannel + "-icon.svg",
     } as FeedbackPayload);
   }
+}
+
+function getVolumeLabel(channel: string, volumeData: VolumeData): string {
+  const isMuted = getIsChannelMuted(channel, volumeData);
+  if (isMuted) return "Muted";
+  const volume = getVolumeOfChannel(channel, volumeData);
+  return `${Math.round(volume * 100)}%`;
 }
 
 function getVolumeOfChannel(channel: string, response: VolumeData): number {
@@ -99,6 +124,31 @@ function getVolumeOfChannel(channel: string, response: VolumeData): number {
       break;
   }
   return volume;
+}
+
+function getIsChannelMuted(channel: string, response: VolumeData): boolean {
+  let muted = false;
+  switch (channel) {
+    case "master":
+      muted = response.masters.classic.muted;
+      break;
+    case "game":
+      muted = response.devices.game.classic.muted;
+      break;
+    case "chatRender":
+      muted = response.devices.chatRender.classic.muted;
+      break;
+    case "media":
+      muted = response.devices.media.classic.muted;
+      break;
+    case "aux":
+      muted = response.devices.aux.classic.muted;
+      break;
+    case "chatCapture":
+      muted = response.devices.chatCapture.classic.muted;
+      break;
+  }
+  return muted;
 }
 
 /**

@@ -151,7 +151,6 @@ export default class Sonar {
   }
 
   async getVolumeData(): Promise<VolumeData> {
-    streamDeck.logger.info("Getting volume data");
     const response = await axiosInstance.get(
       `${this.webServerAddress}${this.volumePath}`,
     );
@@ -218,7 +217,7 @@ export default class Sonar {
     return response.data;
   }
 
-  async getChannelMuteData(channel: string): Promise<any> {
+  async getChannelMuteData(channel: string): Promise<boolean> {
     const response = await axiosInstance.get(
       `${this.webServerAddress}${this.volumePath}`,
     );
