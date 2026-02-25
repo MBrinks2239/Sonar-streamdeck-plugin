@@ -10,7 +10,7 @@ import streamDeck, {
 } from "@elgato/streamdeck";
 import sonar from "../../managers/sonar-controller";
 import { VolumeData } from "../../types/volume-data";
-import { convertChannelNameToHumanReadable, getNextChannel } from "../../util/channel";
+import { convertChannelNameToHumanReadable, getChannelIcon, getNextChannel } from "../../util/channel";
 
 @action({ UUID: "com.stellar.steelseries-sonar-controls.volume-dial" })
 export class SetVolumeDial extends SingletonAction<SetVolumeDialSettings> {
@@ -89,7 +89,7 @@ export class SetVolumeDial extends SingletonAction<SetVolumeDialSettings> {
       indicator: volume * 100,
       value: getVolumeLabel(channel, response),
       title: convertChannelNameToHumanReadable(settings.selectedChannel),
-      icon: "imgs/channels/" + settings.selectedChannel + "-icon.svg",
+      icon: getChannelIcon(settings.selectedChannel),
     } as FeedbackPayload);
   }
 }
