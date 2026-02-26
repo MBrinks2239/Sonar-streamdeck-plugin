@@ -29,4 +29,20 @@ test("Mute chanel", async () => {
    await sonar.muteChannel(Channel.Game, true);
    let volume = await sonar.getVolume(Channel.Game);
    expect(volume.muted).toBe(true);
+   await sonar.muteChannel(Channel.Game, false);
+   volume = await sonar.getVolume(Channel.Game);
+   expect(volume.muted).toBe(false);
+});
+
+test("Get audio devices", async () => {
+   const sonar = new SonarClassic();
+   await sonar.waitForInitialization();
+   const devices = await sonar.getAudioDevices();
+   expect(devices).toBeDefined();
+   expect(Array.isArray(devices)).toBe(true);
+   devices.forEach((device) => {
+       expect(device).toHaveProperty("id");
+       expect(device).toHaveProperty("name");
+       expect(device).toHaveProperty("type");
+   });
 });

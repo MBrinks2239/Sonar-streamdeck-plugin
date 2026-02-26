@@ -1,7 +1,12 @@
-export interface AudioDevice {
+export type AudioDevice = {
   id: string;
   name: string;
-  type: "input" | "output";
+  type: AudioDeviceType;
+};
+
+export enum AudioDeviceType {
+  Input = "input",
+  Output = "output",
 }
 
 export interface AudioDeviceDto {
@@ -18,6 +23,6 @@ export function convertDtoToAudioDevice(dto: AudioDeviceDto): AudioDevice {
   return {
     id: dto.id,
     name: dto.friendlyName,
-    type: dto.dataFlow === "capture" ? "input" : "output",
+    type: dto.dataFlow === "capture" ? AudioDeviceType.Input : AudioDeviceType.Output,
   };
 }

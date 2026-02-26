@@ -65,8 +65,25 @@
 			]
 		},
 		{
-			"Name": "Switch sound output of sonar channel",
+			"Name": "Switch sound output of sonar channel legacy",
 			"UUID": "com.stellar.steelseries-sonar-controls.switch-output",
+			"VisibleInActionsList": false,
+			"Icon": "imgs/actions/switch-output/headphones",
+			"Tooltip": "Change which speaker the sonar channel is outputting to.",
+			"PropertyInspectorPath": "ui/legacy/switch-output.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/switch-output/headphones",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Switch sound output of sonar channel",
+			"UUID": "com.stellar.steelseries-sonar-controls.classic.switch-output",
 			"VisibleInActionsList": true,
 			"Icon": "imgs/actions/switch-output/headphones",
 			"Tooltip": "Change which speaker the sonar channel is outputting to.",
@@ -87,7 +104,7 @@
 			"VisibleInActionsList": true,
 			"Icon": "imgs/actions/switch-input/mic",
 			"Tooltip": "Change which speaker the sonar channel is inputting to.",
-			"PropertyInspectorPath": "ui/switch-input.html",
+			"PropertyInspectorPath": "ui/legacy/switch-input.html",
 			"Controllers": [
 				"Keypad"
 			],

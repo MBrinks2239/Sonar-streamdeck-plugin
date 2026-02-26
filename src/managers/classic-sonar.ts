@@ -16,7 +16,7 @@ import {
 import { ChannelVolume, ChatMix, convertVolumeDataToVolumes, Volumes } from "../types/volume-classic";
 import { clamp } from "../util/util";
 import { Channel } from "../types/channels";
-import { AudioDevice, convertDtoToAudioDevice } from "../types/audio-device";
+import { AudioDevice, AudioDeviceDto, convertDtoToAudioDevice } from "../types/audio-device";
 
 // Create an axios instance allowing self-signed certificates
 const axiosInstance = axios.create({
@@ -87,7 +87,6 @@ export default class SonarClassic {
 
     this.webServerAddress =
       steelseriesState.subApps.sonar.metadata.webServerAddress;
-    console.log("Web server address:", this.webServerAddress);
     if (!this.webServerAddress) throw new WebServerAddressNotFoundError();
   }
 
@@ -123,7 +122,6 @@ export default class SonarClassic {
   // ------ Muting channel ------
   async muteChannel(channel: Channel, muted: boolean): Promise<boolean> {
     const url = `${this.webServerAddress}/${this.volumePath}/${channel}/Mute/${JSON.stringify(muted)}`;
-    console.log(`Setting mute for channel ${channel} to ${muted}. URL: ${url}`);
     const response = await axiosInstance.put(url);
     return response.status === 200;
   }
@@ -162,12 +160,15 @@ export default class SonarClassic {
     if (response.status !== 200)
       throw new ServerNotAccessibleError(response.status);
 
-    return response.data.map(convertDtoToAudioDevice);
+    return response.data.filter((device: AudioDeviceDto) => device.role === "none").map(convertDtoToAudioDevice);
   }
 
   // ------ Output control ------
   async switchDevice(channel: Channel, outputDevice: AudioDevice): Promise<boolean> {
     const deviceType = channel === Channel.Mic ? "input" : "output";
+    streamDeck.logger.info(`Switching output for channel: ${channel} to output device: ${outputDevice.name}`);
+    streamDeck.logger.info(`Expected device type: ${deviceType}`);
+    streamDeck.logger.info(`Actual device type: ${outputDevice.type}`);
     if (outputDevice.type !== deviceType) {
       throw new Error(`Provided audio device is not an ${deviceType} device`);
     }

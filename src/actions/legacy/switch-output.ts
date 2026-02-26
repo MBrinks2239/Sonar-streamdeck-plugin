@@ -10,7 +10,7 @@ import type {
 import sonar from "../../managers/legacy/sonar-controller";
 
 @action({ UUID: "com.stellar.steelseries-sonar-controls.switch-output" })
-export class SwitchOutput extends SingletonAction<SwitchOutputSettings> {
+export class LegacySwitchOutput extends SingletonAction<SwitchOutputSettings> {
   private readonly sonarInstance = new sonar();
 
   override async onKeyDown(
