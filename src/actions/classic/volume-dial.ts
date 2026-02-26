@@ -1,4 +1,4 @@
-import streamDeck, {
+import {
   action,
   DialDownEvent,
   DialRotateEvent,
@@ -8,13 +8,15 @@ import streamDeck, {
   WillAppearEvent,
   WillDisappearEvent,
 } from "@elgato/streamdeck";
-import sonar from "../../managers/sonar-controller";
-import { VolumeData } from "../../types/volume-data";
-import { convertChannelNameToHumanReadable, getChannelIcon, getNextChannel } from "../../util/channel";
+import SonarClassic from "../../managers/classic-sonar";
+import { getChannelIcon, getNextChannel } from "../../util/channel";
+import { Channel, enumKeyFromValue } from "../../types/channels";
+import { clamp } from "../../util/util";
+import { ChannelVolume } from "../../types/volume-classic";
 
-@action({ UUID: "com.stellar.steelseries-sonar-controls.volume-dial" })
+@action({ UUID: "com.stellar.steelseries-sonar-controls.classic.volume-dial" })
 export class SetVolumeDial extends SingletonAction<SetVolumeDialSettings> {
-  private readonly sonarInstance = new sonar();
+  private readonly sonarInstance = new SonarClassic();
   private intervalId: NodeJS.Timeout | null = null;
 
   	override async onWillAppear(
@@ -23,7 +25,7 @@ export class SetVolumeDial extends SingletonAction<SetVolumeDialSettings> {
 		if (!ev.action.isDial()) return;
 
 		let settings = ev.payload.settings;
-		if (!settings.selectedChannel) settings.selectedChannel = "master";
+		if (!settings.selectedChannel) settings.selectedChannel = Channel.Master;
 		if (!settings.stepSize) settings.stepSize = 5;
 
 		ev.action.setSettings(settings);
@@ -45,24 +47,19 @@ export class SetVolumeDial extends SingletonAction<SetVolumeDialSettings> {
 	}
 
   override async onDialRotate(ev: DialRotateEvent<SetVolumeDialSettings>): Promise<void> {
-    streamDeck.logger.info(
-      `Set volume for channel: ${ev.payload.settings.selectedChannel}`,
-    );
     const channel = ev.payload.settings.selectedChannel;
-    const response = await this.sonarInstance.getVolumeData();
-
-    let volume = getVolumeOfChannel(channel, response);
+    const volume = await this.sonarInstance.getVolume(channel);
 
     const step = (ev.payload.settings.stepSize ?? 1) / 100;
 
-    const newVolume = clamp(volume + step * ev.payload.ticks, 0, 1);
+    const newVolume = clamp(volume.volume + step * ev.payload.ticks, 0, 1);
 
     await this.sonarInstance.setVolume(channel, newVolume);
 
     ev.action.setFeedback({
       indicator: newVolume * 100,
-      value: getVolumeLabel(channel, response),
-      title: convertChannelNameToHumanReadable(ev.payload.settings.selectedChannel),
+      value: getVolumeLabel({ volume: newVolume, muted: volume.muted }),
+      title: enumKeyFromValue(Channel, ev.payload.settings.selectedChannel)
     } as FeedbackPayload);
   }
 
@@ -75,91 +72,33 @@ export class SetVolumeDial extends SingletonAction<SetVolumeDialSettings> {
   }
 
   override async onDialDown(ev: DialDownEvent<SetVolumeDialSettings>): Promise<void> {
-    const isMuted = await this.sonarInstance.getChannelMuteData(ev.payload.settings.selectedChannel);
-    this.sonarInstance.muteChannel(ev.payload.settings.selectedChannel, !isMuted);
+    const volume = await this.sonarInstance.getVolume(ev.payload.settings.selectedChannel);
+    this.sonarInstance.muteChannel(ev.payload.settings.selectedChannel, !volume.muted);
     this.updateDisplay(this.sonarInstance, ev.action);
   }
 
-  private async updateDisplay(sonarInstance: sonar, action: any) {
+  private async updateDisplay(sonarInstance: SonarClassic, action: any) {
     const settings = await action.getSettings();
     const channel = settings.selectedChannel;
-    const response = await sonarInstance.getVolumeData();
-    let volume = getVolumeOfChannel(channel, response);
+    const volume = await sonarInstance.getVolume(channel);
     action.setFeedback({
-      indicator: volume * 100,
-      value: getVolumeLabel(channel, response),
-      title: convertChannelNameToHumanReadable(settings.selectedChannel),
+      indicator: volume.volume * 100,
+      value: getVolumeLabel(volume),
+      title: enumKeyFromValue(Channel, settings.selectedChannel),
       icon: getChannelIcon(settings.selectedChannel),
     } as FeedbackPayload);
   }
 }
 
-function getVolumeLabel(channel: string, volumeData: VolumeData): string {
-  const isMuted = getIsChannelMuted(channel, volumeData);
-  if (isMuted) return "Muted";
-  const volume = getVolumeOfChannel(channel, volumeData);
-  return `${Math.round(volume * 100)}%`;
-}
-
-function getVolumeOfChannel(channel: string, response: VolumeData): number {
-  let volume = 0;
-  switch (channel) {
-    case "master":
-      volume = response.masters.classic.volume;
-      break;
-    case "game":
-      volume = response.devices.game.classic.volume;
-      break;
-    case "chatRender":
-      volume = response.devices.chatRender.classic.volume;
-      break;
-    case "media":
-      volume = response.devices.media.classic.volume;
-      break;
-    case "aux":
-      volume = response.devices.aux.classic.volume;
-      break;
-    case "chatCapture":
-      volume = response.devices.chatCapture.classic.volume;
-      break;
-  }
-  return volume;
-}
-
-function getIsChannelMuted(channel: string, response: VolumeData): boolean {
-  let muted = false;
-  switch (channel) {
-    case "master":
-      muted = response.masters.classic.muted;
-      break;
-    case "game":
-      muted = response.devices.game.classic.muted;
-      break;
-    case "chatRender":
-      muted = response.devices.chatRender.classic.muted;
-      break;
-    case "media":
-      muted = response.devices.media.classic.muted;
-      break;
-    case "aux":
-      muted = response.devices.aux.classic.muted;
-      break;
-    case "chatCapture":
-      muted = response.devices.chatCapture.classic.muted;
-      break;
-  }
-  return muted;
+function getVolumeLabel(volume: ChannelVolume): string {
+  if (volume.muted) return "Muted";
+  return `${Math.round(volume.volume * 100)}%`;
 }
 
 /**
  * Settings for {@link SetVolumeDial}.
  */
 type SetVolumeDialSettings = {
-  selectedChannel: string;
+  selectedChannel: Channel;
   stepSize: number;
 };
-
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), max);
-}
-

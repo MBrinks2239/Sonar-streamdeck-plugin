@@ -3,7 +3,7 @@ import * as path from "node:path";
 import streamDeck from "@elgato/streamdeck";
 import axios from "axios";
 import * as https from "node:https";
-import { VolumeData } from "../types/volume-data";
+import { VolumeData } from "../../types/volume-data";
 
 export type AudioDevice = {
   friendlyName: string;

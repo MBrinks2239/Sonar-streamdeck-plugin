@@ -5,7 +5,7 @@ import streamDeck, {
   KeyDownEvent,
   SingletonAction,
 } from "@elgato/streamdeck";
-import sonar from "../../managers/sonar-controller";
+import sonar from "../../managers/legacy/sonar-controller";
 import { VolumeData } from "../../types/volume-data";
 
 @action({ UUID: "com.stellar.steelseries-sonar-controls.set-volume" })

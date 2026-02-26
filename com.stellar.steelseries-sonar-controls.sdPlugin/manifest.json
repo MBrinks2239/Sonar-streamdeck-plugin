@@ -1,11 +1,11 @@
 {
 	"Name": "Steelseries Sonar Controls",
-	"Version": "0.1.0.3",
+	"Version": "0.2.0.0",
 	"Author": "stellar",
 	"Actions": [
 		{
 			"Name": "Classic: Volume dial",
-			"UUID": "com.stellar.steelseries-sonar-controls.volume-dial",
+			"UUID": "com.stellar.steelseries-sonar-controls.classic.volume-dial",
 			"Icon": "imgs/actions/volume-dial/dial_icon",
 			"Tooltip": "Adjust the volume of one of the sonar channels.",
 			"PropertyInspectorPath": "ui/volume-dial.html",
@@ -31,6 +31,7 @@
 			"UUID": "com.stellar.steelseries-sonar-controls.mute-channel",
 			"Icon": "imgs/actions/mute-channel/volume_off",
 			"Tooltip": "Mute one of the sonar channels.",
+			"VisibleInActionsList": true,
 			"PropertyInspectorPath": "ui/mute-channel.html",
 			"Controllers": [
 				"Keypad"
@@ -49,6 +50,7 @@
 		{
 			"Name": "Set sonar volume",
 			"UUID": "com.stellar.steelseries-sonar-controls.set-volume",
+			"VisibleInActionsList": true,
 			"Icon": "imgs/actions/set-volume/volume_up",
 			"Tooltip": "Mute one of the sonar channels.",
 			"PropertyInspectorPath": "ui/set-volume.html",
@@ -65,6 +67,7 @@
 		{
 			"Name": "Switch sound output of sonar channel",
 			"UUID": "com.stellar.steelseries-sonar-controls.switch-output",
+			"VisibleInActionsList": true,
 			"Icon": "imgs/actions/switch-output/headphones",
 			"Tooltip": "Change which speaker the sonar channel is outputting to.",
 			"PropertyInspectorPath": "ui/switch-output.html",
@@ -81,6 +84,7 @@
 		{
 			"Name": "Switch sound input of sonar channel",
 			"UUID": "com.stellar.steelseries-sonar-controls.switch-input",
+			"VisibleInActionsList": true,
 			"Icon": "imgs/actions/switch-input/mic",
 			"Tooltip": "Change which speaker the sonar channel is inputting to.",
 			"PropertyInspectorPath": "ui/switch-input.html",
@@ -97,6 +101,7 @@
 		{
 			"Name": "Load a preset sonar configuration",
 			"UUID": "com.stellar.steelseries-sonar-controls.load-full-config",
+			"VisibleInActionsList": true,
 			"Icon": "imgs/actions/load-full-config/package",
 			"Tooltip": "Change which speaker the sonar channel is outputting to.",
 			"PropertyInspectorPath": "ui/load-full-config.html",
@@ -116,9 +121,9 @@
 	"CodePath": "bin/plugin.js",
 	"Description": "easily change the output of your sonar outputs",
 	"Icon": "imgs/plugin/steelseries",
-	"SDKVersion": 2,
+	"SDKVersion": 3,
 	"Software": {
-		"MinimumVersion": "6.4"
+		"MinimumVersion": "6.9"
 	},
 	"OS": [
 		{

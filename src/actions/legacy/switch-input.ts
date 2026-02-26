@@ -7,7 +7,7 @@ import streamDeck, {
 import type {
 	JsonValue
 } from "@elgato/utils";
-import sonar from "../../managers/sonar-controller";
+import sonar from "../../managers/legacy/sonar-controller";
 
 @action({ UUID: "com.stellar.steelseries-sonar-controls.switch-input" })
 export class SwitchInput extends SingletonAction<SwitchInputSettings> {
