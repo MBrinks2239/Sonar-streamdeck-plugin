@@ -17,6 +17,7 @@ import { ChannelVolume, ChatMix, convertVolumeDataToVolumes, Volumes } from "../
 import { clamp } from "../util/util";
 import { Channel } from "../types/channels";
 import { AudioDevice, AudioDeviceDto, convertDtoToAudioDevice } from "../types/audio-device";
+import { convertChannelNameToHumanReadable } from "../util/channel";
 
 // Create an axios instance allowing self-signed certificates
 const axiosInstance = axios.create({
@@ -166,9 +167,6 @@ export default class SonarClassic {
   // ------ Output control ------
   async switchDevice(channel: Channel, outputDevice: AudioDevice): Promise<boolean> {
     const deviceType = channel === Channel.Mic ? "input" : "output";
-    streamDeck.logger.info(`Switching output for channel: ${channel} to output device: ${outputDevice.name}`);
-    streamDeck.logger.info(`Expected device type: ${deviceType}`);
-    streamDeck.logger.info(`Actual device type: ${outputDevice.type}`);
     if (outputDevice.type !== deviceType) {
       throw new Error(`Provided audio device is not an ${deviceType} device`);
     }
@@ -202,7 +200,7 @@ export default class SonarClassic {
       throw new Error("Provided audio device is not available");
     }
 
-    const url = `${this.webServerAddress}/ClassicRedirections/${channel}/deviceId/${outputDevice.id}`;
+    const url = `${this.webServerAddress}/ClassicRedirections/${convertChannelNameToHumanReadable(channel)}/deviceId/${outputDevice.id}`;
     const response = await axiosInstance.put(url, outputDevice);
     return response.status === 200;
   }
