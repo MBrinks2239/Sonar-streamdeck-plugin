@@ -1,6 +1,6 @@
 {
 	"Name": "Steelseries Sonar Controls",
-	"Version": "0.2.0.0",
+	"Version": "0.3.0.0",
 	"Author": "stellar",
 	"Actions": [
 		{
@@ -52,7 +52,7 @@
 			"UUID": "com.stellar.steelseries-sonar-controls.set-volume",
 			"VisibleInActionsList": true,
 			"Icon": "imgs/actions/set-volume/volume_up",
-			"Tooltip": "Mute one of the sonar channels.",
+			"Tooltip": "Set the volume of one of the sonar channels.",
 			"PropertyInspectorPath": "ui/set-volume.html",
 			"Controllers": [
 				"Keypad"
@@ -104,7 +104,7 @@
 			"VisibleInActionsList": true,
 			"Icon": "imgs/actions/switch-input/mic",
 			"Tooltip": "Change which speaker the sonar channel is inputting to.",
-			"PropertyInspectorPath": "ui/legacy/switch-input.html",
+			"PropertyInspectorPath": "ui/switch-input.html",
 			"Controllers": [
 				"Keypad"
 			],
