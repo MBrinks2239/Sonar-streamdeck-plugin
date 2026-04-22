@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+  <head lang="en">
+    <title>Streamer: Switch output</title>
+    <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v3/sdpi-components.js"></script>
+  </head>
+
+  <body>
+    <sdpi-item label="Streamer slider">
+      <sdpi-select
+        setting="selectedSlider"
+        placeholder="Please choose a streamer slider"
+      >
+        <option value="streaming">Streaming</option>
+        <option value="monitoring">Monitoring</option>
+      </sdpi-select>
+    </sdpi-item>
+    <sdpi-item label="Output to switch to">
+      <sdpi-select
+        setting="audioDeviceJson"
+        placeholder="Please choose an output to switch to"
+        datasource="getOutputs"
+        loading="Loading..."
+      >
+      </sdpi-select>
+    </sdpi-item>
+  </body>
+</html>
