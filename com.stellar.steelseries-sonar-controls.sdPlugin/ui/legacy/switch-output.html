@@ -12,16 +12,16 @@
         setting="channelToChange"
         placeholder="Please choose a channel to change"
       >
-        <option value="master">Master</option>
+        <option value="all">All</option>
         <option value="game">Game</option>
-        <option value="chatRender">Chat</option>
+        <option value="chat">Chat</option>
         <option value="media">Media</option>
         <option value="aux">Aux</option>
       </sdpi-select>
     </sdpi-item>
     <sdpi-item label="Output to switch to">
       <sdpi-select
-        setting="audioDeviceJson"
+        setting="outputToChangeTo"
         placeholder="Please choose an output to switch to"
         datasource="getOutputs"
         loading="Loading..."

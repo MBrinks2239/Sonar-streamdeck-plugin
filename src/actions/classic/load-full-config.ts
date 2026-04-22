@@ -1,11 +1,13 @@
 import streamDeck, {
   action,
-  JsonValue,
   KeyDownEvent,
   SendToPluginEvent,
   SingletonAction,
 } from "@elgato/streamdeck";
-import sonar from "../managers/sonar-controller";
+import type {
+	JsonValue
+} from "@elgato/utils";
+import sonar from "../../managers/legacy/sonar-controller";
 
 @action({ UUID: "com.stellar.steelseries-sonar-controls.load-full-config" })
 export class LoadFullConfig extends SingletonAction<LoadFullConfigSettings> {
@@ -80,12 +82,12 @@ export class LoadFullConfig extends SingletonAction<LoadFullConfigSettings> {
       .filter((output) => output.dataFlow == "capture" && output.role == "none")
       .map((output) => ({ label: output.friendlyName, value: output.id }));
 
-    streamDeck.ui.current?.sendToPropertyInspector({
+    streamDeck.ui.sendToPropertyInspector({
       event: "getOutputs",
       items: outputOptions,
     });
 
-    streamDeck.ui.current?.sendToPropertyInspector({
+    streamDeck.ui.sendToPropertyInspector({
       event: "getInputs",
       items: inputOptions,
     });

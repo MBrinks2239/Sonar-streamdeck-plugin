@@ -1,9 +1,9 @@
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import streamDeck from "@elgato/streamdeck";
 import axios from "axios";
-import * as https from "https";
-import { VolumeData } from "../types/volume-data";
+import * as https from "node:https";
+import { VolumeData } from "../../types/volume-data";
 
 export type AudioDevice = {
   friendlyName: string;
@@ -151,7 +151,6 @@ export default class Sonar {
   }
 
   async getVolumeData(): Promise<VolumeData> {
-    streamDeck.logger.info("Getting volume data");
     const response = await axiosInstance.get(
       `${this.webServerAddress}${this.volumePath}`,
     );
@@ -218,7 +217,7 @@ export default class Sonar {
     return response.data;
   }
 
-  async getChannelMuteData(channel: string): Promise<any> {
+  async getChannelMuteData(channel: string): Promise<boolean> {
     const response = await axiosInstance.get(
       `${this.webServerAddress}${this.volumePath}`,
     );
