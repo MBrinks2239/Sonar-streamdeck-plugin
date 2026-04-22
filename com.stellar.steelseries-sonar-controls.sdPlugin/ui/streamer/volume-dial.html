@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+  <head lang="en">
+    <title>Streamer: Volume dial</title>
+    <meta charset="utf-8" />
+    <script src="https://sdpi-components.dev/releases/v3/sdpi-components.js"></script>
+  </head>
+
+  <body>
+    <sdpi-item label="Streamer slider">
+      <sdpi-select
+        setting="selectedSlider"
+        placeholder="Please choose a streamer slider"
+      >
+        <option value="streaming">Streaming</option>
+        <option value="monitoring">Monitoring</option>
+      </sdpi-select>
+    </sdpi-item>
+    <sdpi-item label="Channel to adjust">
+      <sdpi-select
+        setting="selectedChannel"
+        placeholder="Please choose a channel"
+      >
+        <option value="master">Master</option>
+        <option value="game">Game</option>
+        <option value="chatRender">Chat</option>
+        <option value="media">Media</option>
+        <option value="aux">Aux</option>
+        <option value="chatCapture">Mic</option>
+      </sdpi-select>
+    </sdpi-item>
+    <sdpi-item label="Step size">
+      <sdpi-textfield
+        setting="stepSize"
+        placeholder="Please enter a step size"
+        pattern="^([0-9]|([1-9][0-9])|100)$"
+        required
+      >
+      </sdpi-textfield>
+    </sdpi-item>
+  </body>
+</html>

@@ -7,6 +7,10 @@ import { LoadFullConfig } from "./actions/classic/load-full-config";
 import { SwitchInput } from "./actions/classic/switch-input";
 import { SetVolumeDial } from "./actions/classic/volume-dial";
 import { LegacySwitchOutput } from "./actions/legacy/switch-output";
+import { StreamerVolumeDial } from "./actions/streamer/volume-dial";
+import { StreamerMuteChannel } from "./actions/streamer/mute-channel";
+import { StreamerSetVolume } from "./actions/streamer/set-volume";
+import { StreamerSwitchOutput } from "./actions/streamer/switch-output";
 
 // We can enable "trace" logging so that all messages between the Stream Deck, and the plugin are recorded. When storing sensitive information
 streamDeck.logger.setLevel("debug");
@@ -19,6 +23,12 @@ streamDeck.actions.registerAction(new SetVolume());
 streamDeck.actions.registerAction(new LoadFullConfig());
 streamDeck.actions.registerAction(new SwitchInput());
 streamDeck.actions.registerAction(new SetVolumeDial());
+
+// Streamer-mode actions.
+streamDeck.actions.registerAction(new StreamerVolumeDial());
+streamDeck.actions.registerAction(new StreamerMuteChannel());
+streamDeck.actions.registerAction(new StreamerSetVolume());
+streamDeck.actions.registerAction(new StreamerSwitchOutput());
 
 // Finally, connect to the Stream Deck.
 streamDeck.connect();

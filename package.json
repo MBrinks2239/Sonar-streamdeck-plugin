@@ -2,6 +2,7 @@
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w --watch.onEnd=\"streamdeck restart com.stellar.steelseries-sonar-controls\"",
+    "pack": "streamdeck pack com.stellar.steelseries-sonar-controls.sdPlugin",
     "test": "jest"
   },
   "devDependencies": {

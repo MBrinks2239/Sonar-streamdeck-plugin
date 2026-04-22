@@ -1,6 +1,6 @@
 {
 	"Name": "Steelseries Sonar Controls",
-	"Version": "0.2.0.0",
+	"Version": "0.3.0.0",
 	"Author": "stellar",
 	"Actions": [
 		{
@@ -52,7 +52,7 @@
 			"UUID": "com.stellar.steelseries-sonar-controls.set-volume",
 			"VisibleInActionsList": true,
 			"Icon": "imgs/actions/set-volume/volume_up",
-			"Tooltip": "Mute one of the sonar channels.",
+			"Tooltip": "Set the volume of one of the sonar channels.",
 			"PropertyInspectorPath": "ui/set-volume.html",
 			"Controllers": [
 				"Keypad"
@@ -104,13 +104,91 @@
 			"VisibleInActionsList": true,
 			"Icon": "imgs/actions/switch-input/mic",
 			"Tooltip": "Change which speaker the sonar channel is inputting to.",
-			"PropertyInspectorPath": "ui/legacy/switch-input.html",
+			"PropertyInspectorPath": "ui/switch-input.html",
 			"Controllers": [
 				"Keypad"
 			],
 			"States": [
 				{
 					"Image": "imgs/actions/switch-input/mic",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Streamer: Volume dial",
+			"UUID": "com.stellar.steelseries-sonar-controls.streamer.volume-dial",
+			"Icon": "imgs/actions/volume-dial/dial_icon",
+			"Tooltip": "Adjust the volume of a streamer-mode slider channel.",
+			"PropertyInspectorPath": "ui/streamer/volume-dial.html",
+			"Controllers": [
+				"Encoder"
+			],
+			"Encoder": {
+				"layout": "$B1",
+				"TriggerDescription": {
+					"Rotate": "Adjust Volume",
+					"Push": "Toggle Mute",
+					"Touch": "Swap between channels"
+				}
+			},
+			"States": [
+				{
+					"Image": "imgs/actions/mute-channel/volume_up"
+				}
+			]
+		},
+		{
+			"Name": "Streamer: Mute channel",
+			"UUID": "com.stellar.steelseries-sonar-controls.streamer.mute-channel",
+			"Icon": "imgs/actions/mute-channel/volume_off",
+			"Tooltip": "Mute a channel on a streamer-mode slider.",
+			"VisibleInActionsList": true,
+			"PropertyInspectorPath": "ui/streamer/mute-channel.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/mute-channel/volume_up",
+					"TitleAlignment": "middle"
+				},
+				{
+					"Image": "imgs/actions/mute-channel/volume_off",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
+			"Name": "Streamer: Set volume",
+			"UUID": "com.stellar.steelseries-sonar-controls.streamer.set-volume",
+			"VisibleInActionsList": true,
+			"Icon": "imgs/actions/set-volume/volume_up",
+			"Tooltip": "Increment or decrement a channel volume on a streamer-mode slider.",
+			"PropertyInspectorPath": "ui/streamer/set-volume.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/set-volume/volume_up",
+					"TitleAlignment": "bottom"
+				}
+			]
+		},
+		{
+			"Name": "Streamer: Switch stream output",
+			"UUID": "com.stellar.steelseries-sonar-controls.streamer.switch-output",
+			"VisibleInActionsList": true,
+			"Icon": "imgs/actions/switch-output/headphones",
+			"Tooltip": "Change which device a streamer slider outputs to.",
+			"PropertyInspectorPath": "ui/streamer/switch-output.html",
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/switch-output/headphones",
 					"TitleAlignment": "middle"
 				}
 			]
