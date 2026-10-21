@@ -1,36 +1,22 @@
-import * as fs from "node:fs";
-import * as path from "node:path";
-import streamDeck from "@elgato/streamdeck";
-import axios from "axios";
-import * as https from "node:https";
-import {
-  EnginePathNotFoundError,
-  InvalidMixVolumeError,
-  InvalidVolumeError,
-  ServerNotAccessibleError,
-  ServerNotReadyError,
-  ServerNotRunningError,
-  SonarNotEnabledError,
-  WebServerAddressNotFoundError,
-} from "../types/errors";
+import { InvalidMixVolumeError, InvalidVolumeError } from "../types/errors";
 import { ChannelVolume, ChatMix, convertVolumeDataToVolumes, Volumes } from "../types/volume-classic";
-import { clamp } from "../util/util";
+import { clamp, formatVolumeForUrl, isValidVolume } from "../util/util";
 import { Channel } from "../types/channels";
-import { AudioDevice, AudioDeviceDto, convertDtoToAudioDevice } from "../types/audio-device";
+import {
+  AudioDevice,
+  AudioDeviceDto,
+  AudioDeviceType,
+  convertDtoToAudioDevice,
+  findAudioDevice,
+  SavedAudioDevice,
+} from "../types/audio-device";
 import { convertChannelNameToHumanReadable } from "../util/channel";
-
-// Create an axios instance allowing self-signed certificates
-const axiosInstance = axios.create({
-  httpsAgent: new https.Agent({
-    rejectUnauthorized: false, // Allow self-signed certificates
-  }),
-});
+import { VolumeData } from "../types/volume-data";
+import { getSonarConnection, SonarConnection } from "./sonar-connection";
 
 export default class SonarClassic {
-  private readonly volumePath: string = "volumeSettings/classic";
-  private readonly appDataPath: string;
-  private baseUrl!: string;
-  private webServerAddress!: string;
+  private readonly volumePath: string = "/volumeSettings/classic";
+  private readonly connection: SonarConnection;
   public static readonly channelNames = [
     "master",
     "game",
@@ -41,63 +27,27 @@ export default class SonarClassic {
   ];
 
   constructor(appDataPath: string | null = null) {
-    this.appDataPath =
-      appDataPath ??
-      path.join(
-        process.env["ProgramData"] ?? "",
-        "SteelSeries",
-        "SteelSeries Engine 3",
-        "coreProps.json",
-      );
-
-    this.init();
+    this.connection = getSonarConnection(appDataPath);
   }
 
+  /** Resolves once the Sonar web server has been found; rejects if GG or Sonar is not running. */
   async waitForInitialization(): Promise<void> {
-    while (!this.webServerAddress) {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      } catch (error) {
-        console.error("Error during initialization:", error);
-      }
-    }
+    await this.connection.getAddress();
   }
 
-  private loadBaseUrl(): void {
-    if (!fs.existsSync(this.appDataPath)) throw new EnginePathNotFoundError();
-
-    const data = fs.readFileSync(this.appDataPath, "utf8");
-    const commonAppData = JSON.parse(data);
-    this.baseUrl = `https://${commonAppData.ggEncryptedAddress}`;
+  // ------ Mode ------
+  async isClassicMode(): Promise<boolean> {
+    return (await this.connection.getMode()) === "classic";
   }
 
-  private async init(): Promise<void> {
-    this.loadBaseUrl();
-    const response = await axiosInstance.get(`${this.baseUrl}/subApps`);
-
-    if (response.status !== 200)
-      throw new ServerNotAccessibleError(response.status);
-
-    const steelseriesState = response.data;
-    if (!steelseriesState.subApps.sonar.isEnabled)
-      throw new SonarNotEnabledError();
-    if (!steelseriesState.subApps.sonar.isReady)
-      throw new ServerNotReadyError();
-    if (!steelseriesState.subApps.sonar.isRunning)
-      throw new ServerNotRunningError();
-
-    this.webServerAddress =
-      steelseriesState.subApps.sonar.metadata.webServerAddress;
-    if (!this.webServerAddress) throw new WebServerAddressNotFoundError();
+  async requireClassicMode(): Promise<void> {
+    await this.connection.requireMode("classic");
   }
 
   // ------ Volume control ------
   async getVolumes(): Promise<Volumes> {
-    const response = await axiosInstance.get(
-      `${this.webServerAddress}/${this.volumePath}`,
-    );
-
-    return convertVolumeDataToVolumes(response.data);
+    const data = await this.connection.request<VolumeData>("GET", this.volumePath);
+    return convertVolumeDataToVolumes(data);
   }
 
   async getVolume(channel: Channel): Promise<ChannelVolume> {
@@ -106,11 +56,10 @@ export default class SonarClassic {
   }
 
   async setVolume(channel: Channel, volume: number): Promise<boolean> {
-    if (volume < 0 || volume > 1)
+    if (!isValidVolume(volume))
       throw new InvalidVolumeError(volume);
-    const url = `${this.webServerAddress}/${this.volumePath}/${channel}/Volume/${JSON.stringify(volume)}`;
-    const response = await axiosInstance.put(url);
-    return response.status === 200;
+    await this.connection.request("PUT", `${this.volumePath}/${channel}/Volume/${formatVolumeForUrl(volume)}`);
+    return true;
   }
 
   async offsetVolume(channel: Channel, offset: number): Promise<boolean> {
@@ -119,12 +68,11 @@ export default class SonarClassic {
     return this.setVolume(channel, newVolume);
   }
 
-  
+
   // ------ Muting channel ------
   async muteChannel(channel: Channel, muted: boolean): Promise<boolean> {
-    const url = `${this.webServerAddress}/${this.volumePath}/${channel}/Mute/${JSON.stringify(muted)}`;
-    const response = await axiosInstance.put(url);
-    return response.status === 200;
+    await this.connection.request("PUT", `${this.volumePath}/${channel}/Mute/${JSON.stringify(muted)}`);
+    return true;
   }
 
   async toggleMuteChannel(channel: Channel): Promise<boolean> {
@@ -135,73 +83,45 @@ export default class SonarClassic {
 
   // ------ Chat Mix ------
   async getChatMix(): Promise<ChatMix> {
-    const response = await axiosInstance.get(
-      `${this.webServerAddress}/chatMix`,
-    );
-    const data = response.data;
+    const data = await this.connection.request<ChatMix>("GET", "/chatMix");
     return {
       balance: data.balance
     };
   }
 
   async setChatMixBalance(balance: number): Promise<boolean> {
-    if (balance < -1 || balance > 1)
+    if (!(balance >= -1 && balance <= 1))
       throw new InvalidMixVolumeError(balance);
 
-    const url = `${this.webServerAddress}/chatMix?balance=${JSON.stringify(balance)}`;
-    const response = await axiosInstance.put(url);
-    return response.status === 200;
+    await this.connection.request("PUT", `/chatMix?balance=${JSON.stringify(balance)}`);
+    return true;
   }
 
   // ------ Audio devices ------
   async getAudioDevices(): Promise<AudioDevice[]> {
-    const response = await axiosInstance.get(
-      `${this.webServerAddress}/audioDevices`,
-    );
-    if (response.status !== 200)
-      throw new ServerNotAccessibleError(response.status);
-
-    return response.data.filter((device: AudioDeviceDto) => device.role === "none").map(convertDtoToAudioDevice);
+    const data = await this.connection.request<AudioDeviceDto[]>("GET", "/audioDevices");
+    return data.filter((device) => device.role === "none").map(convertDtoToAudioDevice);
   }
 
   // ------ Output control ------
-  async switchDevice(channel: Channel, outputDevice: AudioDevice): Promise<boolean> {
-    const deviceType = channel === Channel.Mic ? "input" : "output";
-    if (outputDevice.type !== deviceType) {
+  /** Routes a channel to a device. `Master` routes all four output channels. */
+  async switchDevice(channel: Channel, device: SavedAudioDevice): Promise<boolean> {
+    const deviceType = channel === Channel.Mic ? AudioDeviceType.Input : AudioDeviceType.Output;
+    if (device.type && device.type !== deviceType) {
       throw new Error(`Provided audio device is not an ${deviceType} device`);
     }
 
-    if (channel === Channel.Master) {
-      let success = true;
-       success = success && await this.switchOutputOfChannel(Channel.Game, outputDevice);
-       success = success && await this.switchOutputOfChannel(Channel.Chat, outputDevice);
-       success = success && await this.switchOutputOfChannel(Channel.Media, outputDevice);
-       success = success && await this.switchOutputOfChannel(Channel.Aux, outputDevice);
-      return success;
+    // Use the id of the device that was actually found, which differs when it matched by name.
+    const target = findAudioDevice(await this.getAudioDevices(), device, deviceType);
+    const channels = channel === Channel.Master
+      ? [Channel.Game, Channel.Chat, Channel.Media, Channel.Aux]
+      : [channel];
+    for (const outputChannel of channels) {
+      await this.connection.request(
+        "PUT",
+        `/ClassicRedirections/${convertChannelNameToHumanReadable(outputChannel)}/deviceId/${encodeURIComponent(target.id)}`,
+      );
     }
-    return this.switchOutputOfChannel(channel, outputDevice);
-  }
-
-  private async switchOutputOfChannel(channel: Channel, outputDevice: AudioDevice): Promise<boolean> {
-    if (channel === Channel.Master) {
-      throw new Error("Master channels do not have an output");
-    }
-
-    const deviceType = channel === Channel.Mic ? "input" : "output";
-
-    const availableDevices = await this.getAudioDevices();
-    const deviceExists = availableDevices.find(
-      (device) => device.id === outputDevice.id && device.type === deviceType,
-    ) || availableDevices.find(
-      (device) => device.name === outputDevice.name && device.type === deviceType,
-    );
-
-    if (!deviceExists) {
-      throw new Error("Provided audio device is not available");
-    }
-
-    const url = `${this.webServerAddress}/ClassicRedirections/${convertChannelNameToHumanReadable(channel)}/deviceId/${outputDevice.id}`;
-    const response = await axiosInstance.put(url, outputDevice);
-    return response.status === 200;
+    return true;
   }
 }

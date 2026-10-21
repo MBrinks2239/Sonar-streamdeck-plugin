@@ -7,80 +7,70 @@ import streamDeck, {
 import type {
 	JsonValue
 } from "@elgato/utils";
-import sonar from "../../managers/legacy/sonar-controller";
+import SonarClassic from "../../managers/classic-sonar";
+import { Channel } from "../../types/channels";
+import { AudioDeviceType, parseSavedAudioDevice } from "../../types/audio-device";
+import { getErrorMessage, listAudioDevicesForUi, runAction } from "../../util/action";
+
+/** Each row of the property inspector: the settings prefix, its channel and its device setting. */
+const configChannels: { prefix: "game" | "chat" | "media" | "aux" | "mic"; channel: Channel; deviceSetting: keyof LoadFullConfigSettings }[] = [
+  { prefix: "game", channel: Channel.Game, deviceSetting: "gameChannelOutput" },
+  { prefix: "chat", channel: Channel.Chat, deviceSetting: "chatChannelOutput" },
+  { prefix: "media", channel: Channel.Media, deviceSetting: "mediaChannelOutput" },
+  { prefix: "aux", channel: Channel.Aux, deviceSetting: "auxChannelOutput" },
+  { prefix: "mic", channel: Channel.Mic, deviceSetting: "micChannelInput" },
+];
 
 @action({ UUID: "com.stellar.steelseries-sonar-controls.load-full-config" })
 export class LoadFullConfig extends SingletonAction<LoadFullConfigSettings> {
-  private readonly sonarInstance = new sonar();
+  private readonly sonarInstance = new SonarClassic();
 
   override async onKeyDown(
     ev: KeyDownEvent<LoadFullConfigSettings>,
   ): Promise<void> {
-    const gameMuted = ev.payload.settings.gameChannelMute || false;
-    const chatMuted = ev.payload.settings.chatChannelMute || false;
-    const mediaMuted = ev.payload.settings.mediaChannelMute || false;
-    const auxMuted = ev.payload.settings.auxChannelMute || false;
-    const micMuted = ev.payload.settings.micChannelMute || false;
+    await runAction(ev.action, "Load full config", async () => {
+      await this.sonarInstance.requireClassicMode();
+      const settings = ev.payload.settings as Record<string, JsonValue | undefined>;
+      const failures: string[] = [];
 
-    this.sonarInstance.setVolume(
-      "game",
-      ev.payload.settings.gameChannelVolume / 100,
-    );
-    this.sonarInstance.switchOutput(
-      "game",
-      ev.payload.settings.gameChannelOutput,
-    );
-    this.sonarInstance.muteChannel("game", gameMuted);
+      // One request at a time, so the steps can't race each other. A failing step doesn't stop
+      // the rest, and blank fields are skipped instead of being sent as NaN.
+      for (const { prefix, channel, deviceSetting } of configChannels) {
+        const attempt = async (what: string, step: () => Promise<unknown>) => {
+          try {
+            await step();
+          } catch (error) {
+            failures.push(`${prefix} ${what}: ${getErrorMessage(error)}`);
+          }
+        };
 
-    this.sonarInstance.setVolume(
-      "chatRender",
-      ev.payload.settings.chatChannelVolume / 100,
-    );
-    this.sonarInstance.switchOutput(
-      "chat",
-      ev.payload.settings.chatChannelOutput,
-    );
-    this.sonarInstance.muteChannel("chatRender", chatMuted);
+        const volume = settings[`${prefix}ChannelVolume`];
+        if (volume !== undefined && volume !== null && volume !== "" && Number.isFinite(Number(volume))) {
+          await attempt("volume", () => this.sonarInstance.setVolume(channel, Number(volume) / 100));
+        }
+        const device = parseSavedAudioDevice(settings[deviceSetting]);
+        if (device) {
+          await attempt("device", () => this.sonarInstance.switchDevice(channel, device));
+        }
+        await attempt("mute", () => this.sonarInstance.muteChannel(channel, settings[`${prefix}ChannelMute`] === true));
+      }
 
-    this.sonarInstance.setVolume(
-      "media",
-      ev.payload.settings.mediaChannelVolume / 100,
-    );
-    this.sonarInstance.switchOutput(
-      "media",
-      ev.payload.settings.mediaChannelOutput,
-    );
-    this.sonarInstance.muteChannel("media", mediaMuted);
-
-    this.sonarInstance.setVolume(
-      "aux",
-      ev.payload.settings.auxChannelVolume / 100,
-    );
-    this.sonarInstance.switchOutput(
-      "aux",
-      ev.payload.settings.auxChannelOutput,
-    );
-    this.sonarInstance.muteChannel("aux", auxMuted);
-
-    this.sonarInstance.setVolume(
-      "chatCapture",
-      ev.payload.settings.micChannelVolume / 100,
-    );
-    this.sonarInstance.switchOutput("mic", ev.payload.settings.micChannelInput);
-    this.sonarInstance.muteChannel("chatCapture", micMuted);
+      if (failures.length) throw new Error(failures.join("; "));
+      await ev.action.showOk();
+    });
   }
 
   override async onSendToPlugin(
     ev: SendToPluginEvent<JsonValue, LoadFullConfigSettings>,
   ): Promise<void> {
-    const outputs = await this.sonarInstance.getAudioDevices();
-    const outputOptions = outputs
-      .filter((output) => output.dataFlow == "render" && output.role == "none")
-      .map((output) => ({ label: output.friendlyName, value: output.id }));
+    const devices = await listAudioDevicesForUi(() => this.sonarInstance.getAudioDevices());
+    const outputOptions = devices
+      .filter((device) => device.type === AudioDeviceType.Output)
+      .map((device) => ({ label: device.name, value: device.id }));
 
-    const inputOptions = outputs
-      .filter((output) => output.dataFlow == "capture" && output.role == "none")
-      .map((output) => ({ label: output.friendlyName, value: output.id }));
+    const inputOptions = devices
+      .filter((device) => device.type === AudioDeviceType.Input)
+      .map((device) => ({ label: device.name, value: device.id }));
 
     streamDeck.ui.sendToPropertyInspector({
       event: "getOutputs",

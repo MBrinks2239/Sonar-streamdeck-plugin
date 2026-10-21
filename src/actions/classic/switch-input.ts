@@ -7,26 +7,40 @@ import streamDeck, {
 import type {
 	JsonValue
 } from "@elgato/utils";
-import sonar from "../../managers/legacy/sonar-controller";
+import SonarClassic from "../../managers/classic-sonar";
+import SonarStreamer from "../../managers/streamer-sonar";
+import { Channel } from "../../types/channels";
+import { AudioDeviceType, parseSavedAudioDevice } from "../../types/audio-device";
+import { listAudioDevicesForUi, runAction } from "../../util/action";
 
+/** Works in both modes, so it is not limited to Classic despite living here. */
 @action({ UUID: "com.stellar.steelseries-sonar-controls.switch-input" })
 export class SwitchInput extends SingletonAction<SwitchInputSettings> {
-  private readonly sonarInstance = new sonar();
+  private readonly classicInstance = new SonarClassic();
+  private readonly streamerInstance = new SonarStreamer();
 
   override async onKeyDown(
     ev: KeyDownEvent<SwitchInputSettings>,
   ): Promise<void> {
-    const input = ev.payload.settings.inputToChangeTo;
-    await this.sonarInstance.switchOutput("mic", input);
+    await runAction(ev.action, "Switch input", async () => {
+      const input = parseSavedAudioDevice(ev.payload.settings.inputToChangeTo);
+      if (!input) throw new Error("No input device selected");
+      // In Streamer mode the classic mic redirection is accepted but has no effect.
+      if (await this.streamerInstance.isStreamerMode()) {
+        await this.streamerInstance.switchMicInput(input);
+      } else {
+        await this.classicInstance.switchDevice(Channel.Mic, input);
+      }
+    });
   }
 
   override async onSendToPlugin(
     ev: SendToPluginEvent<JsonValue, SwitchInputSettings>,
   ): Promise<void> {
-    const inputs = await this.sonarInstance.getAudioDevices();
+    const inputs = await listAudioDevicesForUi(() => this.classicInstance.getAudioDevices());
     const options = inputs
-      .filter((input) => input.dataFlow == "capture" && input.role == "none")
-      .map((input) => ({ label: input.friendlyName, value: input.id }));
+      .filter((input) => input.type === AudioDeviceType.Input)
+      .map((input) => ({ label: input.name, value: input.id }));
 
     streamDeck.ui.sendToPropertyInspector({
       event: "getInputs",

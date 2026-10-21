@@ -9,9 +9,9 @@ import type {
 	JsonValue
 } from "@elgato/utils";
 import Channel from "../../types/channels";
-import { AudioDevice, AudioDeviceType } from "../../types/audio-device";
+import { AudioDevice, AudioDeviceType, parseSavedAudioDevice } from "../../types/audio-device";
 import SonarClassic from "../../managers/classic-sonar";
-import { json } from "node:stream/consumers";
+import { listAudioDevicesForUi, runAction } from "../../util/action";
 
 @action({ UUID: "com.stellar.steelseries-sonar-controls.classic.switch-output" })
 export class SwitchOutput extends SingletonAction<SwitchOutputSettings> {
@@ -20,9 +20,12 @@ export class SwitchOutput extends SingletonAction<SwitchOutputSettings> {
   override async onKeyDown(
     ev: KeyDownEvent<SwitchOutputSettings>,
   ): Promise<void> {
-    let channel = ev.payload.settings.channelToChange || Channel.Master;
-    const output = JSON.parse(ev.payload.settings.audioDeviceJson) as AudioDevice;
-    await this.sonarInstance.switchDevice(channel, output);
+    await runAction(ev.action, "Classic switch-output", async () => {
+      const channel = ev.payload.settings.channelToChange || Channel.Master;
+      const output = parseSavedAudioDevice(ev.payload.settings.audioDeviceJson);
+      if (!output) throw new Error("No output device selected");
+      await this.sonarInstance.switchDevice(channel, output);
+    });
   }
 
   override onDidReceiveSettings(ev: DidReceiveSettingsEvent<SwitchOutputSettings>): Promise<void> | void {
@@ -39,7 +42,7 @@ export class SwitchOutput extends SingletonAction<SwitchOutputSettings> {
   override async onSendToPlugin(
     ev: SendToPluginEvent<JsonValue, SwitchOutputSettings>,
   ): Promise<void> {
-    const outputs = await this.sonarInstance.getAudioDevices();
+    const outputs = await listAudioDevicesForUi(() => this.sonarInstance.getAudioDevices());
     const options = outputs
       .filter((output) => output.type == AudioDeviceType.Output)
       .map((output) => ({ label: output.name, value: JSON.stringify(output) }));
