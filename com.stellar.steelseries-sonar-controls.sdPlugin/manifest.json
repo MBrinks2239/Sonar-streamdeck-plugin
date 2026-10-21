@@ -33,6 +33,7 @@
 			"Tooltip": "Mute one of the sonar channels.",
 			"VisibleInActionsList": true,
 			"PropertyInspectorPath": "ui/mute-channel.html",
+			"DisableAutomaticStates": true,
 			"Controllers": [
 				"Keypad"
 			],
@@ -145,6 +146,7 @@
 			"Tooltip": "Mute a channel on a streamer-mode slider.",
 			"VisibleInActionsList": true,
 			"PropertyInspectorPath": "ui/streamer/mute-channel.html",
+			"DisableAutomaticStates": true,
 			"Controllers": [
 				"Keypad"
 			],

@@ -12,6 +12,9 @@ import { StreamerMuteChannel } from "./actions/streamer/mute-channel";
 import { StreamerSetVolume } from "./actions/streamer/set-volume";
 import { StreamerSwitchOutput } from "./actions/streamer/switch-output";
 
+// A stray rejection must never take the whole plugin down.
+process.on("unhandledRejection", (reason) => streamDeck.logger.error(`Unhandled rejection: ${reason}`));
+
 // We can enable "trace" logging so that all messages between the Stream Deck, and the plugin are recorded. When storing sensitive information
 streamDeck.logger.setLevel("debug");
 
