@@ -1,4 +1,4 @@
-import streamDeck, { Action } from "@elgato/streamdeck";
+import streamDeck from "@elgato/streamdeck";
 import { isExpectedSonarError } from "../types/errors";
 import { AudioDevice } from "../types/audio-device";
 
@@ -7,7 +7,7 @@ import { AudioDevice } from "../types/audio-device";
  * key or dial shows the alert triangle instead.
  */
 export async function runAction(
-  action: Pick<Action, "showAlert">,
+  action: { showAlert(): Promise<void> },
   label: string,
   handler: () => Promise<void>,
 ): Promise<void> {

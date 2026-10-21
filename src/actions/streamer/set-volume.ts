@@ -1,7 +1,6 @@
 import streamDeck, {
   action,
-  DialAction,
-  KeyAction,
+  Action,
   KeyDownEvent,
   SingletonAction,
   WillAppearEvent,
@@ -52,7 +51,7 @@ export class StreamerSetVolume extends SingletonAction<StreamerSetVolumeSettings
 
 /** Shows the new volume on every key that has "Show volume as title" on for the same slider and channel. */
 async function checkForSetTitle(
-  action: KeyAction<StreamerSetVolumeSettings> | DialAction<StreamerSetVolumeSettings>,
+  action: Action<StreamerSetVolumeSettings>,
   slider: StreamRedirectionId,
   channel: Channel,
   volume: number,

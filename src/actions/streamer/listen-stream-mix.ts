@@ -20,23 +20,23 @@ const SETTLE_MS = 5000;
  * personal mix. The key follows Sonar, so changes made in the Sonar app show up too.
  */
 @action({ UUID: "com.stellar.steelseries-sonar-controls.streamer.listen-stream-mix" })
-export class StreamerListenStreamMix extends SingletonAction {
+export class StreamerListenStreamMix extends SingletonAction<ListenStreamMixSettings> {
   private readonly sonarInstance = new SonarStreamer();
-  private readonly keys = new Map<string, KeyAction>();
+  private readonly keys = new Map<string, KeyAction<ListenStreamMixSettings>>();
   private intervalId: NodeJS.Timeout | null = null;
   /** The value last set or read; presses toggle from this. */
   private known: boolean | undefined;
   private switching = false;
   private settleUntil = 0;
 
-  override async onWillAppear(ev: WillAppearEvent): Promise<void> {
+  override async onWillAppear(ev: WillAppearEvent<ListenStreamMixSettings>): Promise<void> {
     if (!ev.action.isKey()) return;
     this.keys.set(ev.action.id, ev.action);
     this.intervalId ??= setInterval(() => void this.sync(), SYNC_INTERVAL_MS);
     await this.sync();
   }
 
-  override onWillDisappear(ev: WillDisappearEvent): void {
+  override onWillDisappear(ev: WillDisappearEvent<ListenStreamMixSettings>): void {
     this.keys.delete(ev.action.id);
     if (this.keys.size === 0 && this.intervalId) {
       clearInterval(this.intervalId);
@@ -44,7 +44,7 @@ export class StreamerListenStreamMix extends SingletonAction {
     }
   }
 
-  override async onKeyDown(ev: KeyDownEvent): Promise<void> {
+  override async onKeyDown(ev: KeyDownEvent<ListenStreamMixSettings>): Promise<void> {
     // Sonar reroutes audio devices for this change and keeps reporting the old value for a
     // moment. Reading it back on every press made quick presses cancel out, so presses during a
     // switch are ignored and the toggle starts from the value we last set.
@@ -83,3 +83,6 @@ export class StreamerListenStreamMix extends SingletonAction {
     }
   }
 }
+
+/** The key has no settings. */
+type ListenStreamMixSettings = Record<string, never>;

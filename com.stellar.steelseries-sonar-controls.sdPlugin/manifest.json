@@ -266,7 +266,7 @@
 	"Icon": "imgs/plugin/steelseries",
 	"SDKVersion": 3,
 	"Software": {
-		"MinimumVersion": "6.9"
+		"MinimumVersion": "7.1"
 	},
 	"OS": [
 		{
