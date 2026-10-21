@@ -196,6 +196,52 @@
 			]
 		},
 		{
+			"Name": "Streamer: Mix toggle dial",
+			"UUID": "com.stellar.steelseries-sonar-controls.streamer.mix-toggle-dial",
+			"Icon": "imgs/actions/volume-dial/dial_icon",
+			"Tooltip": "Adjust a streamer-mode channel; tap to flip between the Streaming and Monitoring mix.",
+			"PropertyInspectorPath": "ui/streamer/volume-dial.html",
+			"Controllers": [
+				"Encoder"
+			],
+			"Encoder": {
+				"layout": "$B1",
+				"TriggerDescription": {
+					"Rotate": "Adjust Volume",
+					"Push": "Toggle Mute",
+					"Touch": "Swap between Streaming and Monitoring"
+				}
+			},
+			"States": [
+				{
+					"Image": "imgs/actions/mute-channel/volume_up"
+				}
+			]
+		},
+		{
+			"Name": "Streamer: Listen to stream mix",
+			"UUID": "com.stellar.steelseries-sonar-controls.streamer.listen-stream-mix",
+			"Icon": "imgs/actions/stream-monitoring/stream-mix",
+			"Tooltip": "Toggle whether your headset plays your personal mix or the Streaming mix.",
+			"VisibleInActionsList": true,
+			"DisableAutomaticStates": true,
+			"Controllers": [
+				"Keypad"
+			],
+			"States": [
+				{
+					"Image": "imgs/actions/stream-monitoring/personal-mix",
+					"Name": "Personal mix",
+					"TitleAlignment": "middle"
+				},
+				{
+					"Image": "imgs/actions/stream-monitoring/stream-mix",
+					"Name": "Stream mix",
+					"TitleAlignment": "middle"
+				}
+			]
+		},
+		{
 			"Name": "Load a preset sonar configuration",
 			"UUID": "com.stellar.steelseries-sonar-controls.load-full-config",
 			"VisibleInActionsList": true,
