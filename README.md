@@ -34,6 +34,7 @@ In Streamer mode, Sonar has two mixes: **Streaming** (what your audience hears) 
 | --- | --- | --- |
 | Streamer: Volume dial | Dial | Turn to change a channel's volume in either mix, press to mute it, and tap the touch strip to move to the next channel. |
 | Streamer: Mix toggle dial | Dial | Like the volume dial, but tapping the touch strip switches between the Streaming and Monitoring mix. |
+| Streamer: Cycle dial | Dial | Turn to change the volume and press to mute. Tap the touch strip to switch between the Streaming and Monitoring mix, and double-tap it to move to the next channel in a list of up to 5 that you pick. The double-tap wait can be set from 100 to 1000 ms. |
 | Streamer: Set volume | Key | Raises or lowers a channel's volume in either mix by a set step. |
 | Streamer: Mute channel | Key | Mutes or unmutes a channel in either mix. |
 | Streamer: Switch stream output | Key | Changes which device a mix plays on. |

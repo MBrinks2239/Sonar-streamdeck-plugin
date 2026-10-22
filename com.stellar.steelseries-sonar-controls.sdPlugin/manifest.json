@@ -219,6 +219,29 @@
 			]
 		},
 		{
+			"Name": "Streamer: Cycle dial",
+			"UUID": "com.stellar.steelseries-sonar-controls.streamer.cycle-dial",
+			"Icon": "imgs/actions/volume-dial/dial_icon",
+			"Tooltip": "Adjust a streamer-mode channel; tap to flip the mix, double-tap to cycle through your chosen channels.",
+			"PropertyInspectorPath": "ui/streamer/cycle-dial.html",
+			"Controllers": [
+				"Encoder"
+			],
+			"Encoder": {
+				"layout": "$B1",
+				"TriggerDescription": {
+					"Rotate": "Adjust Volume",
+					"Push": "Toggle Mute",
+					"Touch": "Tap: switch Streaming/Monitoring. Double-tap: next channel"
+				}
+			},
+			"States": [
+				{
+					"Image": "imgs/actions/mute-channel/volume_up"
+				}
+			]
+		},
+		{
 			"Name": "Streamer: Listen to stream mix",
 			"UUID": "com.stellar.steelseries-sonar-controls.streamer.listen-stream-mix",
 			"Icon": "imgs/actions/stream-monitoring/stream-mix",

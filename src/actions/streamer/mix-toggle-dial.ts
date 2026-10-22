@@ -8,9 +8,10 @@ export class StreamerMixToggleDial extends StreamerVolumeDial {
   protected override readonly label = "Streamer mix-toggle-dial";
 
   protected override nextSettingsOnTouch(settings: StreamerVolumeDialSettings): StreamerVolumeDialSettings {
-    const selectedSlider = settings.selectedSlider === StreamRedirectionId.Streaming
-      ? StreamRedirectionId.Monitoring
-      : StreamRedirectionId.Streaming;
-    return { ...settings, selectedSlider };
+    return { ...settings, selectedSlider: getOtherMix(settings.selectedSlider) };
   }
+}
+
+export function getOtherMix(mix: StreamRedirectionId): StreamRedirectionId {
+  return mix === StreamRedirectionId.Streaming ? StreamRedirectionId.Monitoring : StreamRedirectionId.Streaming;
 }

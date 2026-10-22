@@ -16,6 +16,7 @@ import { isExpectedSonarError } from "../types/errors";
 import { getChannelIcon, getNextChannel } from "../util/channel";
 import { clamp } from "../util/util";
 import { getErrorMessage, runAction } from "../util/action";
+import { DEFAULT_DOUBLE_TAP_WAIT_MS, TapDetector, TapKind } from "../util/tap-detector";
 
 const REFRESH_INTERVAL_MS = 1000;
 const DEFAULT_STEP_SIZE = 5;
@@ -34,7 +35,8 @@ export type VolumeLookup<T> = (settings: T) => ChannelVolume;
  * - one Sonar request per refresh, however many dials are visible;
  * - settings kept from events, so the touch strip never shows a stale channel;
  * - fast rotation is added up and written one request at a time;
- * - "Sonar off" or the wrong mode is shown on the dial instead of throwing every second.
+ * - "Sonar off" or the wrong mode is shown on the dial instead of throwing every second;
+ * - an optional double tap on the touch strip; single taps only wait for a second tap when it is on.
  */
 export abstract class VolumeDialBase<T extends VolumeDialSettings & JsonObject> extends SingletonAction<T> {
   protected abstract readonly label: string;
@@ -52,6 +54,10 @@ export abstract class VolumeDialBase<T extends VolumeDialSettings & JsonObject> 
   private readonly pendingTicks = new Map<string, number>();
   private intervalId: NodeJS.Timeout | null = null;
   private refreshing = false;
+  private readonly taps = new TapDetector((id, kind) => {
+    const dial = this.dials.get(id);
+    if (dial) void this.applyTouch(dial.action, dial.settings, kind);
+  });
 
   override async onWillAppear(ev: WillAppearEvent<T>): Promise<void> {
     if (!ev.action.isDial()) return;
@@ -66,6 +72,7 @@ export abstract class VolumeDialBase<T extends VolumeDialSettings & JsonObject> 
   override onWillDisappear(ev: WillDisappearEvent<T>): void {
     this.dials.delete(ev.action.id);
     this.pendingTicks.delete(ev.action.id);
+    this.taps.cancel(ev.action.id);
     if (this.dials.size === 0 && this.intervalId) {
       clearInterval(this.intervalId);
       this.intervalId = null;
@@ -112,16 +119,42 @@ export abstract class VolumeDialBase<T extends VolumeDialSettings & JsonObject> 
   }
 
   override async onTouchTap(ev: TouchTapEvent<T>): Promise<void> {
-    const settings = this.nextSettingsOnTouch(this.getSettings(ev.action.id, ev.payload.settings));
-    const dial = this.dials.get(ev.action.id);
-    if (dial) dial.settings = settings;
-    await ev.action.setSettings(settings);
-    await this.refreshAll();
+    const id = ev.action.id;
+    const settings = this.getSettings(id, ev.payload.settings);
+    if (this.nextSettingsOnDoubleTouch(settings) === null) {
+      // No double tap on this dial, so there is nothing to wait for.
+      this.taps.cancel(id);
+      await this.applyTouch(ev.action, settings, "single");
+      return;
+    }
+    this.taps.tap(id, this.getDoubleTapWaitMs(settings));
   }
 
   /** What tapping the touch strip does; by default it moves to the next channel. */
   protected nextSettingsOnTouch(settings: T): T {
     return { ...settings, selectedChannel: getNextChannel(settings.selectedChannel) as Channel };
+  }
+
+  /** What a double tap does, or null when the dial has none (the default), so single taps act at once. */
+  protected nextSettingsOnDoubleTouch(_settings: T): T | null {
+    return null;
+  }
+
+  /** How long a tap waits for a second tap. */
+  protected getDoubleTapWaitMs(_settings: T): number {
+    return DEFAULT_DOUBLE_TAP_WAIT_MS;
+  }
+
+  private async applyTouch(action: DialAction<T>, current: T, kind: TapKind): Promise<void> {
+    await runAction(action, `${this.label} touch`, async () => {
+      const settings = kind === "double"
+        ? (this.nextSettingsOnDoubleTouch(current) ?? current)
+        : this.nextSettingsOnTouch(current);
+      const dial = this.dials.get(action.id);
+      if (dial) dial.settings = settings;
+      await action.setSettings(settings);
+      await this.refreshAll();
+    });
   }
 
   private getSettings(id: string, fallback: T): T {
