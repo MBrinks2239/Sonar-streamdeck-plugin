@@ -13,6 +13,7 @@ import { StreamerSetVolume } from "./actions/streamer/set-volume";
 import { StreamerSwitchOutput } from "./actions/streamer/switch-output";
 import { StreamerMixToggleDial } from "./actions/streamer/mix-toggle-dial";
 import { StreamerListenStreamMix } from "./actions/streamer/listen-stream-mix";
+import { StreamerCycleDial } from "./actions/streamer/cycle-dial";
 
 // A stray rejection must never take the whole plugin down.
 process.on("unhandledRejection", (reason) => streamDeck.logger.error(`Unhandled rejection: ${reason}`));
@@ -36,6 +37,7 @@ streamDeck.actions.registerAction(new StreamerSetVolume());
 streamDeck.actions.registerAction(new StreamerSwitchOutput());
 streamDeck.actions.registerAction(new StreamerMixToggleDial());
 streamDeck.actions.registerAction(new StreamerListenStreamMix());
+streamDeck.actions.registerAction(new StreamerCycleDial());
 
 // Finally, connect to the Stream Deck.
 streamDeck.connect();
